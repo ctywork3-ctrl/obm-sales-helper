@@ -17,7 +17,7 @@ export default function AllOrders() {
     search: search || undefined,
     status: status === 'All' ? undefined : status,
     page,
-    per_page: 10,
+    page_size: 10,
   })
 
   return (

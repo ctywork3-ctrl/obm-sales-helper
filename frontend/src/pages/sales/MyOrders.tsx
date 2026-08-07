@@ -14,7 +14,7 @@ export default function MyOrders() {
   const { data, isLoading } = useSalesOrders({
     status: status === 'All' ? undefined : status,
     page,
-    per_page: 10,
+    page_size: 10,
   })
 
   return (
@@ -57,8 +57,13 @@ export default function MyOrders() {
                 <div>
                   <p className="font-semibold">{order.order_number}</p>
                   <p className="text-sm text-muted-foreground">
-                    {order.customer?.name || 'N/A'}
+                    {order.customer?.name || 'Walk-in'}
                   </p>
+                  {order.salesman?.full_name && (
+                    <p className="text-xs text-muted-foreground">
+                      Salesman: {order.salesman.full_name}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {formatDate(order.created_at)}
                   </p>

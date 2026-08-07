@@ -7,7 +7,7 @@ export default function Dashboard() {
   const { user } = useAuth()
   const isSales = user?.role === 'OUTSIDE_SALES' || user?.role === 'INSIDE_SALES'
   const { data: ordersData } = useSalesOrders(
-    isSales ? { per_page: 5 } : undefined
+    isSales ? { page_size: 5 } : undefined
   )
 
   const stats = [

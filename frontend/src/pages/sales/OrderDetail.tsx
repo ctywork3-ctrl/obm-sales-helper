@@ -37,7 +37,7 @@ export default function OrderDetail() {
 
   const isOwner = user?.id === order.salesman_id
   const isDrafter = order.status === 'DRAFT' && isOwner
-  const canReview = (user?.role === 'inside_sales' || user?.role === 'it_admin') && order.status === 'SUBMITTED'
+  const canReview = (user?.role === 'INSIDE_SALES' || user?.role === 'IT_ADMIN' || user?.role === 'DEVELOPER') && order.status === 'SUBMITTED'
 
   return (
     <div className="space-y-6">

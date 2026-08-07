@@ -3,7 +3,7 @@ import type { SalesOrder, PaginatedResponse } from '@/types'
 
 export interface SalesOrderListParams {
   page?: number
-  per_page?: number
+  page_size?: number
   search?: string
   status?: string
   customer_id?: number
@@ -60,7 +60,9 @@ export const salesOrdersApi = {
     client.post<SalesOrder>(`/sales-orders/${id}/submit`, data),
 
   review: (id: number, data: ReviewOrderRequest) =>
-    client.post<SalesOrder>(`/sales-orders/${id}/review`, data),
+    data.action === 'reject'
+      ? client.post<SalesOrder>(`/sales-orders/${id}/reject`, { reason: data.rejected_reason })
+      : client.post<SalesOrder>(`/sales-orders/${id}/submit`),
 
   markKeyedToObm: (id: number, data: KeyedToObmRequest) =>
     client.post<SalesOrder>(`/sales-orders/${id}/keyed-to-obm`, data),

@@ -3,6 +3,24 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class SalesmanBrief(BaseModel):
+    id: int
+    full_name: str
+    username: str
+
+    class Config:
+        from_attributes = True
+
+
+class CustomerBrief(BaseModel):
+    id: int
+    name: str
+    code: str
+
+    class Config:
+        from_attributes = True
+
+
 class SalesOrderItemBase(BaseModel):
     product_id: int | None = None
     product_code_snapshot: str | None = None
@@ -61,6 +79,8 @@ class SalesOrderResponse(SalesOrderBase):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     items: list[SalesOrderItemResponse] = []
+    salesman: SalesmanBrief | None = None
+    customer: CustomerBrief | None = None
 
     class Config:
         from_attributes = True

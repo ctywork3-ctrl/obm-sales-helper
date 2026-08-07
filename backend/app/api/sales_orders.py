@@ -42,6 +42,8 @@ async def list_sales_orders(
 
     query = select(SalesOrder).options(
         selectinload(SalesOrder.items),
+        selectinload(SalesOrder.salesman),
+        selectinload(SalesOrder.customer),
     )
 
     if not has_view_all:
@@ -98,9 +100,15 @@ async def create_sales_order(
             sales_order_id=order.id,
             **item_data.model_dump(),
         )
+        item.line_total = (item.quantity or 0) * (item.unit_price or 0) - (item.discount_amount or 0)
         db.add(item)
 
     await db.flush()
+
+    items_result = await db.execute(
+        select(SalesOrderItem).where(SalesOrderItem.sales_order_id == order.id)
+    )
+    order.total_amount = sum(i.line_total or 0 for i in items_result.scalars().all())
 
     await AuditService.log(
         db=db,
@@ -119,7 +127,11 @@ async def create_sales_order(
 
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
         .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one()
@@ -134,8 +146,12 @@ async def get_sales_order(
 ):
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
-        .where(SalesOrder.id == order_id)
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
+        .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one_or_none()
     if not order:
@@ -192,7 +208,11 @@ async def update_sales_order(
 
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
         .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one()
@@ -239,7 +259,11 @@ async def submit_sales_order(
 
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
         .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one()
@@ -287,7 +311,11 @@ async def reject_sales_order(
 
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
         .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one()
@@ -337,7 +365,11 @@ async def mark_keyed_to_obm(
 
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
         .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one()
@@ -380,7 +412,11 @@ async def cancel_sales_order(
 
     result = await db.execute(
         select(SalesOrder)
-        .options(selectinload(SalesOrder.items))
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
         .where(SalesOrder.id == order.id)
     )
     order = result.scalar_one()

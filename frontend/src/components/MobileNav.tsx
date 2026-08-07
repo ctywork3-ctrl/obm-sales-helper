@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Settings,
   UsersRound,
+  Shield,
 } from 'lucide-react'
 
 interface NavItem {
@@ -24,17 +25,19 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: <LayoutDashboard className="h-5 w-5" /> },
   { label: 'Products', href: '/products', icon: <Package className="h-5 w-5" /> },
-  { label: 'Create Order', href: '/sales/create', icon: <ShoppingCart className="h-5 w-5" />, roles: ['outside_sales'] },
-  { label: 'My Orders', href: '/sales/my-orders', icon: <ListOrdered className="h-5 w-5" />, roles: ['outside_sales'] },
-  { label: 'All Orders', href: '/sales/all-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['inside_sales', 'it_admin'] },
+  { label: 'My Customers', href: '/sales/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['OUTSIDE_SALES', 'INSIDE_SALES'] },
+  { label: 'Create Order', href: '/sales/create', icon: <ShoppingCart className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
+  { label: 'My Orders', href: '/sales/my-orders', icon: <ListOrdered className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
+  { label: 'All Orders', href: '/sales/all-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['INSIDE_SALES', 'IT_ADMIN', 'DEVELOPER'] },
 ]
 
 const adminItems: NavItem[] = [
-  { label: 'Users', href: '/admin/users', icon: <Users className="h-5 w-5" />, roles: ['it_admin'] },
-  { label: 'Products', href: '/admin/products', icon: <Package className="h-5 w-5" />, roles: ['it_admin'] },
-  { label: 'Customers', href: '/admin/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['it_admin', 'inside_sales'] },
-  { label: 'Audit Logs', href: '/admin/audit-logs', icon: <ClipboardList className="h-5 w-5" />, roles: ['it_admin'] },
-  { label: 'Settings', href: '/admin/settings', icon: <Settings className="h-5 w-5" />, roles: ['it_admin'] },
+  { label: 'Users', href: '/admin/users', icon: <Users className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Products', href: '/admin/products', icon: <Package className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Customers', href: '/admin/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['IT_ADMIN', 'INSIDE_SALES'] },
+  { label: 'Audit Logs', href: '/admin/audit-logs', icon: <ClipboardList className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Settings', href: '/admin/settings', icon: <Settings className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Role Permissions', href: '/admin/role-permissions', icon: <Shield className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
 ]
 
 interface MobileNavProps {
