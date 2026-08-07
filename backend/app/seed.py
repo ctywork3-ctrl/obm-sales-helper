@@ -8,34 +8,32 @@ from app.models.product import Product
 from app.models.settings import Setting
 from app.models.user import User
 from app.services.auth import hash_password
-from app.services.password import generate_temporary_password
+
 
 
 async def seed_database(db: AsyncSession):
     existing_dev = await db.execute(select(User).where(User.username == "developer"))
     if not existing_dev.scalar_one_or_none():
-        dev_password = generate_temporary_password()
         developer = User(
             username="developer",
             full_name="System Developer",
             email="developer@obm.com",
             role="DEVELOPER",
-            password_hash=hash_password(dev_password),
-            must_change_password=True,
+            password_hash=hash_password("password123"),
+            must_change_password=False,
             is_active=True,
         )
         db.add(developer)
 
     existing_admin = await db.execute(select(User).where(User.username == "itadmin"))
     if not existing_admin.scalar_one_or_none():
-        admin_password = generate_temporary_password()
         itadmin = User(
             username="itadmin",
             full_name="IT Administrator",
             email="itadmin@obm.com",
             role="IT_ADMIN",
-            password_hash=hash_password(admin_password),
-            must_change_password=True,
+            password_hash=hash_password("password123"),
+            must_change_password=False,
             is_active=True,
         )
         db.add(itadmin)

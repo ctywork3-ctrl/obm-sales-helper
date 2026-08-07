@@ -43,3 +43,14 @@ async def startup():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.post("/reset-db")
+async def reset_db():
+    from sqlalchemy import text
+    async with engine.begin() as conn:
+        await conn.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
+        await conn.run_sync(Base.metadata.create_all)
+    async with async_session() as db:
+        await seed_database(db)
+    return {"status": "reset complete"}
