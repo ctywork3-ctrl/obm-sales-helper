@@ -87,12 +87,14 @@ async def login(
 
     await db.commit()
 
+    is_production = request.headers.get("x-forwarded-proto", "http") == "https"
+
     response.set_cookie(
         key="session_token",
         value=session_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
         max_age=settings.SESSION_EXPIRE_MINUTES * 60,
     )
 
