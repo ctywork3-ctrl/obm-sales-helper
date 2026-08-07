@@ -18,3 +18,6 @@ frontend/.env
 Thumbs.db
 Desktop.ini
 *.pyc
+
+# Local Netlify folder
+.netlify
