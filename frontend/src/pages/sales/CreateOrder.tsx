@@ -29,11 +29,11 @@ export default function CreateOrder() {
   const [error, setError] = useState('')
 
   const { data: customersData, isLoading: customersLoading } = useCustomers({
-    per_page: 100,
+    page_size: 100,
   })
   const { data: productsData, isLoading: productsLoading } = useProducts({
     search: productSearch || undefined,
-    per_page: 20,
+    page_size: 20,
   })
   const createOrder = useCreateSalesOrder()
 

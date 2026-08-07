@@ -3,7 +3,7 @@ import type { Customer, PaginatedResponse } from '@/types'
 
 export interface CustomerListParams {
   page?: number
-  per_page?: number
+  page_size?: number
   search?: string
   is_active?: boolean
 }

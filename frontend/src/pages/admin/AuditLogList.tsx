@@ -14,7 +14,7 @@ export default function AuditLogList() {
 
   const { data, isLoading } = useAuditLogs({
     page,
-    per_page: 20,
+    page_size: 20,
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
     action: action || undefined,

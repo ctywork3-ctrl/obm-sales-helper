@@ -15,7 +15,7 @@ export default function SalesCustomerList() {
   const { data, isLoading } = useCustomers({
     search: search || undefined,
     page,
-    per_page: 12,
+    page_size: 12,
   })
   const deleteCustomer = useDeleteCustomer()
 

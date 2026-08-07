@@ -9,7 +9,7 @@ export const authApi = {
     client.post('/auth/logout'),
 
   getMe: () =>
-    client.get<{ user: AuthUser }>('/auth/me'),
+    client.get<AuthUser>('/auth/me'),
 
   changePassword: (data: { current_password: string; new_password: string }) =>
     client.post('/auth/change-password', data),

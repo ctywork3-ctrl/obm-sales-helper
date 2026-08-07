@@ -17,7 +17,7 @@ export default function ProductManagement() {
   const { data, isLoading } = useProducts({
     search: search || undefined,
     page,
-    per_page: 10,
+    page_size: 10,
   })
   const deleteProduct = useDeleteProduct()
 

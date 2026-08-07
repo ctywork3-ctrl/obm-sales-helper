@@ -4,7 +4,6 @@ import type { AuditLog, PaginatedResponse } from '@/types'
 export interface AuditLogListParams {
   page?: number
   page_size?: number
-  per_page?: number
   actor_user_id?: number
   action?: string
   entity_type?: string
@@ -20,7 +19,7 @@ export const auditLogsApi = {
     const query: Record<string, any> = {}
     if (params) {
       if (params.page) query.page = params.page
-      if (params.per_page) query.page_size = params.per_page
+      if (params.page_size) query.page_size = params.page_size
       if (params.action) query.action = params.action
       if (params.entity_type) query.entity_type = params.entity_type
       if (params.actor_user_id) query.actor_user_id = params.actor_user_id

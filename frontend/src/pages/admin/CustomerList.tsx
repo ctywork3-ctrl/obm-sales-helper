@@ -15,7 +15,7 @@ export default function CustomerList() {
   const { data, isLoading } = useCustomers({
     search: search || undefined,
     page,
-    per_page: 10,
+    page_size: 10,
   })
   const deleteCustomer = useDeleteCustomer()
 

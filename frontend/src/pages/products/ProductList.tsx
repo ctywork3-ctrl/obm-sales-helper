@@ -24,7 +24,7 @@ export default function ProductList() {
     search: search || undefined,
     category: category === 'All' ? undefined : category,
     page,
-    per_page: 12,
+    page_size: 12,
   })
 
   return (

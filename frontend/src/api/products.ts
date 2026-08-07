@@ -3,7 +3,7 @@ import type { Product, ProductImage, PaginatedResponse } from '@/types'
 
 export interface ProductListParams {
   page?: number
-  per_page?: number
+  page_size?: number
   search?: string
   category?: string
   is_active?: boolean

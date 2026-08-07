@@ -19,7 +19,7 @@ export default function UserList() {
   const { data, isLoading } = useUsers({
     search: search || undefined,
     page,
-    per_page: 10,
+    page_size: 10,
   })
   const toggleActive = useToggleUserActive()
   const { data: credentials, isLoading: credentialsLoading } = useCredentials()

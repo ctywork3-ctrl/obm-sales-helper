@@ -3,7 +3,7 @@ import type { User, PaginatedResponse } from '@/types'
 
 export interface UserListParams {
   page?: number
-  per_page?: number
+  page_size?: number
   search?: string
   role?: string
   is_active?: boolean
