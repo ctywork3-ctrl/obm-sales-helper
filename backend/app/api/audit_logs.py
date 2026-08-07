@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.database import get_db
 from app.dependencies import require_permission
@@ -30,7 +31,10 @@ async def list_audit_logs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(Permissions.AUDIT_VIEW)),
 ):
-    query = select(AuditLog)
+    actor_alias = aliased(User)
+    query = select(AuditLog, actor_alias.full_name.label("actor_name")).outerjoin(
+        actor_alias, AuditLog.actor_user_id == actor_alias.id
+    )
 
     if action:
         query = query.where(AuditLog.action.ilike(f"%{action}%"))
@@ -45,16 +49,24 @@ async def list_audit_logs(
     if end_date:
         query = query.where(AuditLog.created_at <= end_date)
 
-    count_query = select(func.count()).select_from(query.subquery())
+    count_query = select(func.count()).select_from(
+        select(AuditLog).subquery()
+    )
     total = (await db.execute(count_query)).scalar()
 
     query = query.order_by(AuditLog.created_at.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
-    logs = result.scalars().all()
+    rows = result.all()
+
+    items = []
+    for log, actor_name in rows:
+        log_data = AuditLogResponse.model_validate(log)
+        log_data.actor_name = actor_name
+        items.append(log_data)
 
     return AuditLogListResponse(
-        items=[AuditLogResponse.model_validate(log) for log in logs],
+        items=items,
         total=total,
         page=page,
         page_size=page_size,

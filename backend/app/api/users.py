@@ -220,7 +220,37 @@ async def deactivate_user(
     return UserResponse.model_validate(user)
 
 
-@router.post("/{user_id}/assign-role", response_model=UserResponse)
+@router.post("/{user_id}/reset-password")
+async def reset_password(
+    user_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.USERS_MANAGE)),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    temp_password = generate_temporary_password()
+    user.password_hash = hash_password(temp_password)
+    user.must_change_password = True
+    user.temp_password_display = temp_password
+
+    await AuditService.log(
+        db=db,
+        action="users.reset_password",
+        actor_user_id=current_user.id,
+        actor_role_at_time=current_user.role,
+        entity_type="user",
+        entity_id=user.id,
+        entity_label=user.username,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    await db.commit()
+    return {"temporary_password": temp_password}
 async def assign_role(
     user_id: int,
     body: AssignRoleRequest,

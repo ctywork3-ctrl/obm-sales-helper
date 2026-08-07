@@ -9,6 +9,7 @@ class AuditLogResponse(BaseModel):
     request_id: str | None = None
     actor_type: str | None = None
     actor_user_id: int | None = None
+    actor_name: str | None = None
     actor_role_at_time: str | None = None
     action: str
     entity_type: str | None = None

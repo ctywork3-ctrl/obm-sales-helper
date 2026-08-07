@@ -9,6 +9,7 @@ from app.database import Base
 class OrderStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     SUBMITTED = "SUBMITTED"
+    APPROVED = "APPROVED"
     KEYED_TO_OBM = "KEYED_TO_OBM"
     REJECTED = "REJECTED"
     CANCELLED = "CANCELLED"

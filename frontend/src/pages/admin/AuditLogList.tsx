@@ -83,11 +83,12 @@ export default function AuditLogList() {
               className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="">All Actions</option>
-              <option value="CREATE">Create</option>
-              <option value="UPDATE">Update</option>
-              <option value="DELETE">Delete</option>
-              <option value="LOGIN">Login</option>
-              <option value="LOGOUT">Logout</option>
+              <option value="auth.login">Login</option>
+              <option value="auth.logout">Logout</option>
+              <option value="sales_order">Sales Order</option>
+              <option value="users">Users</option>
+              <option value="products">Products</option>
+              <option value="customers">Customers</option>
             </select>
           </div>
           <div>
@@ -98,10 +99,10 @@ export default function AuditLogList() {
               className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="">All Entities</option>
-              <option value="User">User</option>
-              <option value="Product">Product</option>
-              <option value="Customer">Customer</option>
-              <option value="SalesOrder">Sales Order</option>
+              <option value="user">User</option>
+              <option value="product">Product</option>
+              <option value="customer">Customer</option>
+              <option value="sales_order">Sales Order</option>
             </select>
           </div>
         </div>
@@ -133,7 +134,7 @@ export default function AuditLogList() {
                 <tr key={log.id} className="border-b last:border-0">
                   <td className="px-4 py-3 text-xs">{formatDate(log.created_at)}</td>
                   <td className="px-4 py-3">
-                    <p className="font-medium">{log.actor?.full_name || `User #${log.actor_user_id}`}</p>
+                    <p className="font-medium">{log.actor_name || `User #${log.actor_user_id}`}</p>
                     <p className="text-xs text-muted-foreground">{log.actor_role_at_time}</p>
                   </td>
                   <td className="px-4 py-3">
@@ -203,7 +204,7 @@ export default function AuditLogList() {
                 <span className="font-medium">Request ID:</span> {selectedLog.request_id}
               </div>
               <div>
-                <span className="font-medium">Actor:</span> {selectedLog.actor?.full_name} ({selectedLog.actor?.username})
+                <span className="font-medium">Actor:</span> {selectedLog.actor_name || `User #${selectedLog.actor_user_id}`}
               </div>
               <div>
                 <span className="font-medium">Action:</span> {selectedLog.action}

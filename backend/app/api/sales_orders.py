@@ -270,6 +270,55 @@ async def submit_sales_order(
     return SalesOrderResponse.model_validate(order)
 
 
+@router.post("/{order_id}/approve", response_model=SalesOrderResponse)
+async def approve_sales_order(
+    order_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.SALES_ORDER_REVIEW)),
+):
+    result = await db.execute(select(SalesOrder).where(SalesOrder.id == order_id))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    if order.status != "SUBMITTED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only submitted orders can be approved",
+        )
+
+    order.status = "APPROVED"
+    order.reviewed_by = current_user.id
+    order.reviewed_at = datetime.utcnow()
+
+    await AuditService.log(
+        db=db,
+        action="sales_order.approve",
+        actor_user_id=current_user.id,
+        actor_role_at_time=current_user.role,
+        entity_type="sales_order",
+        entity_id=order.id,
+        entity_label=order.order_number,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    await db.commit()
+
+    result = await db.execute(
+        select(SalesOrder)
+        .options(
+            selectinload(SalesOrder.items),
+            selectinload(SalesOrder.salesman),
+            selectinload(SalesOrder.customer),
+        )
+        .where(SalesOrder.id == order.id)
+    )
+    order = result.scalar_one()
+    return SalesOrderResponse.model_validate(order)
+
+
 @router.post("/{order_id}/reject", response_model=SalesOrderResponse)
 async def reject_sales_order(
     order_id: int,

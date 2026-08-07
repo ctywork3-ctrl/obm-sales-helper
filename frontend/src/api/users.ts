@@ -36,7 +36,7 @@ export interface UserCredential {
 
 export const usersApi = {
   list: (params?: UserListParams) =>
-    client.get<PaginatedResponse<User>>('/users', { params }),
+    client.get<User[]>('/users', { params }),
 
   get: (id: number) =>
     client.get<User>(`/users/${id}`),
@@ -45,10 +45,12 @@ export const usersApi = {
     client.post<User>('/users', data),
 
   update: (id: number, data: UpdateUserRequest) =>
-    client.put<User>(`/users/${id}`, data),
+    client.patch<User>(`/users/${id}`, data),
 
-  toggleActive: (id: number) =>
-    client.patch<User>(`/users/${id}/toggle-active`),
+  toggleActive: (id: number, isActive: boolean) =>
+    isActive
+      ? client.post<User>(`/users/${id}/deactivate`)
+      : client.post<User>(`/users/${id}/activate`),
 
   resetPassword: (id: number) =>
     client.post<{ temporary_password: string }>(`/users/${id}/reset-password`),

@@ -51,7 +51,7 @@ export const salesOrdersApi = {
     client.post<SalesOrder>('/sales-orders', data),
 
   update: (id: number, data: Partial<CreateSalesOrderRequest>) =>
-    client.put<SalesOrder>(`/sales-orders/${id}`, data),
+    client.patch<SalesOrder>(`/sales-orders/${id}`, data),
 
   delete: (id: number) =>
     client.delete(`/sales-orders/${id}`),
@@ -62,10 +62,10 @@ export const salesOrdersApi = {
   review: (id: number, data: ReviewOrderRequest) =>
     data.action === 'reject'
       ? client.post<SalesOrder>(`/sales-orders/${id}/reject`, { reason: data.rejected_reason })
-      : client.post<SalesOrder>(`/sales-orders/${id}/submit`),
+      : client.post<SalesOrder>(`/sales-orders/${id}/approve`),
 
   markKeyedToObm: (id: number, data: KeyedToObmRequest) =>
-    client.post<SalesOrder>(`/sales-orders/${id}/keyed-to-obm`, data),
+    client.post<SalesOrder>(`/sales-orders/${id}/mark-keyed-to-obm`, data),
 
   cancel: (id: number) =>
     client.post<SalesOrder>(`/sales-orders/${id}/cancel`),

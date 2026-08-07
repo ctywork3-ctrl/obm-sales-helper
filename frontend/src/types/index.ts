@@ -100,7 +100,7 @@ export interface AuditLog {
   request_id: string;
   actor_type: string;
   actor_user_id: number;
-  actor?: User;
+  actor_name: string | null;
   actor_role_at_time: string;
   action: string;
   entity_type: string;

@@ -55,11 +55,8 @@ export const productsApi = {
   },
 
   deleteImage: (productId: number, imageId: number) =>
-    client.delete(`/products/${productId}/images/${imageId}`),
+    client.delete(`/product-images/${imageId}`),
 
   setPrimaryImage: (productId: number, imageId: number) =>
-    client.patch(`/products/${productId}/images/${imageId}/primary`),
-
-  getImages: (id: number) =>
-    client.get<ProductImage[]>(`/products/${id}/images`),
+    client.post(`/product-images/${imageId}/set-primary`),
 }

@@ -12,6 +12,7 @@ export default function UserList() {
   const [page, setPage] = useState(1)
   const [toggleUserId, setToggleUserId] = useState<number | null>(null)
   const [toggleUserName, setToggleUserName] = useState('')
+  const [toggleIsActive, setToggleIsActive] = useState(false)
   const [showCredentials, setShowCredentials] = useState(false)
   const [copiedId, setCopiedId] = useState<number | null>(null)
 
@@ -23,12 +24,11 @@ export default function UserList() {
   const toggleActive = useToggleUserActive()
   const { data: credentials, isLoading: credentialsLoading } = useCredentials()
 
-  const userList = Array.isArray(data) ? data : data?.items || []
-  const totalPages = Array.isArray(data) ? 1 : data?.pages || 1
+  const userList = Array.isArray(data) ? data : []
 
   const handleToggle = async () => {
     if (toggleUserId) {
-      await toggleActive.mutateAsync(toggleUserId)
+      await toggleActive.mutateAsync({ id: toggleUserId, isActive: toggleIsActive })
       setToggleUserId(null)
     }
   }
@@ -70,10 +70,6 @@ export default function UserList() {
       {isLoading ? (
         <div className="flex justify-center py-12">
           <LoadingSpinner size="lg" />
-        </div>
-      ) : !userList.length ? (
-        <div className="py-12 text-center text-muted-foreground">
-          No users found
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-white">
@@ -123,6 +119,7 @@ export default function UserList() {
                         onClick={() => {
                           setToggleUserId(user.id)
                           setToggleUserName(user.full_name)
+                          setToggleIsActive(user.is_active)
                         }}
                         className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                       >
@@ -138,28 +135,6 @@ export default function UserList() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="px-3 py-1 text-sm">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
         </div>
       )}
 
@@ -219,7 +194,11 @@ export default function UserList() {
                         >
                           {copiedId === cred.id ? (
                             <Check className="h-4 w-4 text-green-600" />
-                          ) : (
+      ) : !userList.length ? (
+        <div className="py-12 text-center text-muted-foreground">
+          No users found
+        </div>
+      ) : (
                             <Copy className="h-4 w-4" />
                           )}
                         </button>
