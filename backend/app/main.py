@@ -48,9 +48,9 @@ async def health_check():
 @app.post("/reset-db")
 async def reset_db():
     from sqlalchemy import text
-    async with engine.begin() as conn:
-        await conn.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
-        await conn.run_sync(Base.metadata.create_all)
+    async with async_session() as db:
+        await db.execute(text("TRUNCATE sessions, audit_logs, sales_order_items, sales_orders, product_images, customers, products, settings, role_permissions, users RESTART IDENTITY CASCADE"))
+        await db.commit()
     async with async_session() as db:
         await seed_database(db)
     return {"status": "reset complete"}
