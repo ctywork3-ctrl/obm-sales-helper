@@ -43,14 +43,3 @@ async def startup():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
-
-@app.post("/reset-db")
-async def reset_db():
-    from sqlalchemy import text
-    async with async_session() as db:
-        await db.execute(text("TRUNCATE sessions, audit_logs, sales_order_items, sales_orders, product_images, customers, products, settings, role_permissions, users RESTART IDENTITY CASCADE"))
-        await db.commit()
-    async with async_session() as db:
-        await seed_database(db)
-    return {"status": "reset complete"}
