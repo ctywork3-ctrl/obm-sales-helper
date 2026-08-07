@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: obm-sales-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: obm-sales-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
+      - key: PYTHON_VERSION
+        value: 3.13.0
+    healthCheckPath: /health
+
+databases:
+  - name: obm-sales-db
+    plan: free
+    databaseName: obm_sales
+    user: obm_user

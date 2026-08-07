@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: salesapp
+      POSTGRES_USER: salesapp
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_this_in_production}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U salesapp -d salesapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://salesapp:${DB_PASSWORD:-change_this_in_production}@db:5432/salesapp
+      SECRET_KEY: ${SECRET_KEY:-change-this-to-a-random-secret-key-in-production}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080,http://localhost:3000}
+      UPLOAD_DIR: /app/uploads
+      SESSION_EXPIRE_MINUTES: ${SESSION_EXPIRE_MINUTES:-480}
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Uncomment below to use Cloudflare Tunnel
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   command: tunnel --url http://frontend:80
+  #   environment:
+  #     TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     - frontend
+  #   restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
