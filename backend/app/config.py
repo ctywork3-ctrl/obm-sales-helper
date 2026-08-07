@@ -1,38 +1,26 @@
-from typing import Annotated
-from pydantic import BeforeValidator
-from pydantic_settings import BaseSettings
-import json
+import os
 
 
-def _parse_origins(v):
-    if isinstance(v, list):
-        return v
-    if isinstance(v, str):
-        v = v.strip()
-        if not v:
+class Settings:
+    DATABASE_URL: str = os.environ.get("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/obm_sales")
+    SECRET_KEY: str = os.environ.get("SECRET_KEY", "change-me-in-production-use-a-real-secret-key")
+    UPLOAD_DIR: str = os.environ.get("UPLOAD_DIR", "uploads")
+    MAX_UPLOAD_SIZE: int = int(os.environ.get("MAX_UPLOAD_SIZE", "10485760"))
+    SESSION_EXPIRE_MINUTES: int = int(os.environ.get("SESSION_EXPIRE_MINUTES", "480"))
+
+    @property
+    def ALLOWED_ORIGINS(self) -> list[str]:
+        raw = os.environ.get("ALLOWED_ORIGINS", "")
+        if not raw:
             return ["*"]
+        import json
         try:
-            parsed = json.loads(v)
+            parsed = json.loads(raw)
             if isinstance(parsed, list):
                 return parsed
         except (json.JSONDecodeError, ValueError):
             pass
-        return [origin.strip() for origin in v.split(",") if origin.strip()]
-    return ["*"]
-
-
-class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/obm_sales"
-    SECRET_KEY: str = "change-me-in-production-use-a-real-secret-key"
-    ALLOWED_ORIGINS: Annotated[list[str], BeforeValidator(_parse_origins)] = ["http://localhost:3000", "http://localhost:5173"]
-    UPLOAD_DIR: str = "uploads"
-    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
-    SESSION_EXPIRE_MINUTES: int = 480  # 8 hours
-
-    model_config = {
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-    }
+        return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 settings = Settings()
