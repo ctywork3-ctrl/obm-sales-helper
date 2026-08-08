@@ -56,60 +56,108 @@ export default function CustomerList() {
           No customers found
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-left font-medium">Code</th>
-                <th className="px-4 py-3 text-left font-medium">Phone</th>
-                <th className="px-4 py-3 text-left font-medium">Email</th>
-                <th className="px-4 py-3 text-left font-medium">Status</th>
-                <th className="px-4 py-3 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((customer) => (
-                <tr key={customer.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-medium">{customer.name}</td>
-                  <td className="px-4 py-3">{customer.code || customer.obm_customer_code}</td>
-                  <td className="px-4 py-3">{customer.phone || '-'}</td>
-                  <td className="px-4 py-3">{customer.email || '-'}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        customer.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {customer.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <Link
-                        to={`/admin/customers/${customer.id}/edit`}
-                        className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Link>
-                      <button
-                        onClick={() => {
-                          setDeleteId(customer.id)
-                          setDeleteName(customer.name)
-                        }}
-                        className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className="sm:hidden space-y-3">
+            {data.items.map((customer) => (
+              <div key={customer.id} className="rounded-lg border bg-white p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium">{customer.name}</p>
+                    <p className="text-sm text-muted-foreground">{customer.code || customer.obm_customer_code}</p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium flex-shrink-0 ${
+                      customer.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {customer.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                {customer.phone && customer.phone !== '-' && (
+                  <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                )}
+                {customer.email && customer.email !== '-' && (
+                  <p className="text-sm text-muted-foreground truncate">{customer.email}</p>
+                )}
+                <div className="flex items-center gap-3 pt-2 border-t">
+                  <Link
+                    to={`/admin/customers/${customer.id}/edit`}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setDeleteId(customer.id)
+                      setDeleteName(customer.name)
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium text-destructive hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden sm:block overflow-x-auto rounded-lg border bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="px-4 py-3 text-left font-medium">Name</th>
+                  <th className="px-4 py-3 text-left font-medium">Code</th>
+                  <th className="px-4 py-3 text-left font-medium">Phone</th>
+                  <th className="px-4 py-3 text-left font-medium">Email</th>
+                  <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-left font-medium">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data.items.map((customer) => (
+                  <tr key={customer.id} className="border-b last:border-0">
+                    <td className="px-4 py-3 font-medium">{customer.name}</td>
+                    <td className="px-4 py-3">{customer.code || customer.obm_customer_code}</td>
+                    <td className="px-4 py-3">{customer.phone || '-'}</td>
+                    <td className="px-4 py-3">{customer.email || '-'}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          customer.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {customer.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <Link
+                          to={`/admin/customers/${customer.id}/edit`}
+                          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setDeleteId(customer.id)
+                            setDeleteName(customer.name)
+                          }}
+                          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {data && data.pages > 1 && (

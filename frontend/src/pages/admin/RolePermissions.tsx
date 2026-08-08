@@ -114,7 +114,7 @@ export default function RolePermissions() {
       <div className="grid gap-6">
         {data.map((roleData) => (
           <div key={roleData.role} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-semibold">{getRoleDisplayName(roleData.role)}</h2>
@@ -125,7 +125,7 @@ export default function RolePermissions() {
               <button
                 onClick={() => savePermissions(roleData.role)}
                 disabled={isSaving}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? 'Saving...' : 'Save'}

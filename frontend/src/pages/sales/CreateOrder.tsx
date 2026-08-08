@@ -7,7 +7,7 @@ import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { formatCurrency } from '@/lib/utils'
 import { getUploadUrl } from '@/api/client'
-import { Plus, Trash2, ShoppingCart } from 'lucide-react'
+import { Plus, Minus, Trash2, ShoppingCart } from 'lucide-react'
 
 interface OrderItem {
   product_id: number
@@ -184,13 +184,13 @@ export default function CreateOrder() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{product.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">
                     {product.obm_item_code || product.item_code} | Stock: {product.stock_qty}
                   </p>
                 </div>
-                <span className="font-semibold">{formatCurrency(product.selling_price)}</span>
+                <span className="font-semibold flex-shrink-0">{formatCurrency(product.selling_price)}</span>
               </button>
             ))}
           </div>
@@ -236,13 +236,29 @@ export default function CreateOrder() {
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs text-muted-foreground sm:hidden">Qty</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
-                    className="h-9 w-full rounded-md border px-2 text-sm text-center"
-                  />
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => updateItem(index, 'quantity', Math.max(1, item.quantity - 1))}
+                      className="h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-md border hover:bg-gray-100 active:bg-gray-200"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
+                      className="h-9 w-full min-w-0 rounded-md border px-2 text-sm text-center"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateItem(index, 'quantity', item.quantity + 1)}
+                      className="h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-md border hover:bg-gray-100 active:bg-gray-200"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs text-muted-foreground sm:hidden">Unit Price (RM)</label>
@@ -303,17 +319,17 @@ export default function CreateOrder() {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <button
           onClick={() => navigate(-1)}
-          className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent"
+          className="rounded-md border px-4 py-2.5 text-sm font-medium hover:bg-accent"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
           disabled={createOrder.isPending || items.length === 0 || !selectedCustomerId}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           <ShoppingCart className="h-4 w-4" />
           {createOrder.isPending ? 'Creating...' : 'Submit Order'}

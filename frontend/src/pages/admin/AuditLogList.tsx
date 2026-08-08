@@ -117,59 +117,90 @@ export default function AuditLogList() {
           No audit logs found
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium">Timestamp</th>
-                <th className="px-4 py-3 text-left font-medium">Actor</th>
-                <th className="px-4 py-3 text-left font-medium">Action</th>
-                <th className="px-4 py-3 text-left font-medium">Entity</th>
-                <th className="px-4 py-3 text-left font-medium">Result</th>
-                <th className="px-4 py-3 text-left font-medium">Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((log) => (
-                <tr key={log.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 text-xs">{formatDate(log.created_at)}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{log.actor_name || `User #${log.actor_user_id}`}</p>
-                    <p className="text-xs text-muted-foreground">{log.actor_role_at_time}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                      {log.action}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p>{log.entity_type}</p>
-                    <p className="text-xs text-muted-foreground">{log.entity_label}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        log.result === 'SUCCESS'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {log.result}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => setSelectedLog(log)}
-                      className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                  </td>
+        <>
+          <div className="sm:hidden space-y-3">
+            {data.items.map((log) => (
+              <div key={log.id} className="rounded-lg border bg-white p-4 space-y-2">
+                <div className="flex items-start justify-between">
+                  <p className="font-medium text-sm">{log.action}</p>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                      log.result === 'SUCCESS'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {log.result}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">{log.actor_name || `User #${log.actor_user_id}`}</p>
+                <p className="text-sm text-muted-foreground">{log.entity_type} {log.entity_label}</p>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">{formatDate(log.created_at)}</p>
+                  <button
+                    onClick={() => setSelectedLog(log)}
+                    className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden sm:block overflow-x-auto rounded-lg border bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="px-4 py-3 text-left font-medium">Timestamp</th>
+                  <th className="px-4 py-3 text-left font-medium">Actor</th>
+                  <th className="px-4 py-3 text-left font-medium">Action</th>
+                  <th className="px-4 py-3 text-left font-medium">Entity</th>
+                  <th className="px-4 py-3 text-left font-medium">Result</th>
+                  <th className="px-4 py-3 text-left font-medium">Details</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data.items.map((log) => (
+                  <tr key={log.id} className="border-b last:border-0">
+                    <td className="px-4 py-3 text-xs">{formatDate(log.created_at)}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium">{log.actor_name || `User #${log.actor_user_id}`}</p>
+                      <p className="text-xs text-muted-foreground">{log.actor_role_at_time}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p>{log.entity_type}</p>
+                      <p className="text-xs text-muted-foreground">{log.entity_label}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          log.result === 'SUCCESS'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {log.result}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setSelectedLog(log)}
+                        className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {data && data.pages > 1 && (
@@ -195,9 +226,9 @@ export default function AuditLogList() {
       )}
 
       {selectedLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/50" onClick={() => setSelectedLog(null)} />
-          <div className="relative z-50 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg border bg-white p-6 shadow-lg">
+          <div className="relative z-50 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg border bg-white p-4 sm:p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-semibold">Audit Log Details</h2>
             <div className="space-y-3 text-sm">
               <div>

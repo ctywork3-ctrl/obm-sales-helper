@@ -23,7 +23,7 @@ client.interceptors.response.use(
 )
 
 export function getUploadUrl(path: string): string {
-  const base = import.meta.env.VITE_API_URL || ''
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '')
   return `${base}/uploads/${path}`
 }
 

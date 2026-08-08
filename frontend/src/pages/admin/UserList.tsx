@@ -72,70 +72,130 @@ export default function UserList() {
           <LoadingSpinner size="lg" />
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-left font-medium">Username</th>
-                <th className="px-4 py-3 text-left font-medium">Role</th>
-                <th className="px-4 py-3 text-left font-medium">Status</th>
-                <th className="px-4 py-3 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {userList.map((user) => (
-                <tr key={user.id} className="border-b last:border-0">
-                  <td className="px-4 py-3">
+        <>
+          <div className="sm:hidden space-y-3">
+            {userList.map((user) => (
+              <div key={user.id} className="rounded-lg border bg-white p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
                     <p className="font-medium">{user.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </td>
-                  <td className="px-4 py-3">{user.username}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                      {getRoleDisplayName(user.role)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        user.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        to={`/admin/users/${user.id}/edit`}
-                        className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Link>
-                      <button
-                        onClick={() => {
-                          setToggleUserId(user.id)
-                          setToggleUserName(user.full_name)
-                          setToggleIsActive(user.is_active)
-                        }}
-                        className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      >
-                        {user.is_active ? (
-                          <UserX className="h-4 w-4 text-destructive" />
-                        ) : (
-                          <UserCheck className="h-4 w-4 text-green-600" />
-                        )}
-                      </button>
-                    </div>
-                  </td>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                      user.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {user.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">@{user.username}</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                    {getRoleDisplayName(user.role)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 pt-2 border-t">
+                  <Link
+                    to={`/admin/users/${user.id}/edit`}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setToggleUserId(user.id)
+                      setToggleUserName(user.full_name)
+                      setToggleIsActive(user.is_active)
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent ${
+                      user.is_active ? 'text-destructive' : 'text-green-600'
+                    }`}
+                  >
+                    {user.is_active ? (
+                      <>
+                        <UserX className="h-4 w-4" />
+                        Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="h-4 w-4" />
+                        Activate
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden sm:block overflow-x-auto rounded-lg border bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="px-4 py-3 text-left font-medium">Name</th>
+                  <th className="px-4 py-3 text-left font-medium">Username</th>
+                  <th className="px-4 py-3 text-left font-medium">Role</th>
+                  <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-left font-medium">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {userList.map((user) => (
+                  <tr key={user.id} className="border-b last:border-0">
+                    <td className="px-4 py-3">
+                      <p className="font-medium">{user.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </td>
+                    <td className="px-4 py-3">{user.username}</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                        {getRoleDisplayName(user.role)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          user.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <Link
+                          to={`/admin/users/${user.id}/edit`}
+                          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setToggleUserId(user.id)
+                            setToggleUserName(user.full_name)
+                            setToggleIsActive(user.is_active)
+                          }}
+                          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        >
+                          {user.is_active ? (
+                            <UserX className="h-4 w-4 text-destructive" />
+                          ) : (
+                            <UserCheck className="h-4 w-4 text-green-600" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <ConfirmDialog
@@ -149,8 +209,8 @@ export default function UserList() {
       />
 
       {showCredentials && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-4 sm:p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">User Credentials</h2>
               <button
@@ -174,7 +234,7 @@ export default function UserList() {
                 {credentials?.map((cred) => (
                   <div
                     key={cred.id}
-                    className="flex items-center justify-between rounded-md border p-3"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between rounded-md border p-3 gap-2"
                   >
                     <div>
                       <p className="font-medium">{cred.full_name}</p>
