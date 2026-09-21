@@ -6,7 +6,7 @@ import SearchInput from '@/components/SearchInput'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { formatCurrency } from '@/lib/utils'
 import { getUploadUrl } from '@/api/client'
-import { Plus, Pencil, Trash2, Image as ImageIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, Image as ImageIcon, Tag } from 'lucide-react'
 
 export default function ProductManagement() {
   const [search, setSearch] = useState('')
@@ -40,7 +40,7 @@ export default function ProductManagement() {
             className="w-full sm:w-64"
           />
           <Link
-            to="/admin/products/new"
+              to="/app/admin/products/new"
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
@@ -98,18 +98,25 @@ export default function ProductManagement() {
                 </div>
                 <div className="flex items-center gap-3 pt-2 border-t">
                   <Link
-                    to={`/admin/products/${product.id}/edit`}
+                    to={`/app/admin/products/${product.id}/edit`}
                     className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent"
                   >
                     <Pencil className="h-4 w-4" />
                     Edit
                   </Link>
                   <Link
-                    to={`/admin/products/${product.id}/images`}
+                    to={`/app/admin/products/${product.id}/images`}
                     className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent"
                   >
                     <ImageIcon className="h-4 w-4" />
                     Images
+                  </Link>
+                  <Link
+                    to={`/app/admin/products/${product.id}/prices`}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  >
+                    <Tag className="h-4 w-4" />
+                    Prices
                   </Link>
                   <button
                     onClick={() => {
@@ -180,22 +187,33 @@ export default function ProductManagement() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <Link
-                          to={`/admin/products/${product.id}/edit`}
+                          to={`/app/admin/products/${product.id}/edit`}
+                          title="Edit product"
                           className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>
                         <Link
-                          to={`/admin/products/${product.id}/images`}
+                          to={`/app/admin/products/${product.id}/images`}
+                          title="Manage images"
                           className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         >
                           <ImageIcon className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          to={`/app/admin/products/${product.id}/prices`}
+                          title="Manage prices"
+                          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Tag className="h-4 w-4" />
                         </Link>
                         <button
                           onClick={() => {
                             setDeleteId(product.id)
                             setDeleteName(product.name)
                           }}
+                          title="Delete product"
+                          aria-label={`Delete ${product.name}`}
                           className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />

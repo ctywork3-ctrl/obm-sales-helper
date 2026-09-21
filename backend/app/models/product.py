@@ -12,6 +12,7 @@ class Product(Base):
     item_code = Column(String(50), unique=True, index=True)
     name = Column(String(200), nullable=False)
     category = Column(String(100))
+    category_id = Column(Integer, ForeignKey("product_categories.id"), nullable=True, index=True)
     brand = Column(String(100))
     uom = Column(String(20))
     description = Column(Text)
@@ -22,12 +23,21 @@ class Product(Base):
     last_stock_sync_at = Column(DateTime)
     barcode = Column(String(100))
     is_active = Column(Boolean, default=True)
+    commission_rate = Column(Numeric(5, 2), default=0)
+    evidence_policy = Column(String(20), default="RECEIPT", nullable=False)
+    inventory_model = Column(String(20), default="BULK", nullable=False)
+    # Warranty term in months, snapshotted onto each ProductUnit at receiving
+    # time. NULL means "use the company default from Settings".
+    warranty_months = Column(Integer, nullable=True)
+    reorder_level = Column(Integer, default=10, nullable=False)
     created_by = Column(Integer, ForeignKey("users.id"))
     updated_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")
+    prices = relationship("ProductPrice", back_populates="product", cascade="all, delete-orphan")
+    category_ref = relationship("ProductCategory", foreign_keys=[category_id], lazy="joined")
 
 
 class ProductImage(Base):

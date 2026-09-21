@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useSettings, useBulkUpdateSettings } from '@/hooks/useSettings'
+import { purchaseOrdersApi } from '@/api/purchaseOrders'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { Save } from 'lucide-react'
 
 export default function Settings() {
   const { data: settings, isLoading } = useSettings()
   const updateSettings = useBulkUpdateSettings()
+
+  // Tells the user honestly whether the OBM link is configured — and that the
+  // connector is not built, so those fields are not silently decorative.
+  const { data: obmStatus } = useQuery({
+    queryKey: ['obm-status'],
+    queryFn: () => purchaseOrdersApi.obmStatus().then((res) => res.data),
+  })
 
   const [formData, setFormData] = useState({
     company_name: '',
@@ -15,6 +24,7 @@ export default function Settings() {
     default_currency: 'MYR',
     obm_api_url: '',
     obm_api_key: '',
+    enable_obm_sync: false,
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -23,7 +33,13 @@ export default function Settings() {
     if (settings) {
       const data: any = {}
       settings.forEach((s) => {
-        data[s.key] = s.value_json
+        // value_json is stored as { value: <raw> }; unwrap (recursively, in
+        // case older saves nested it) so inputs always hold raw values.
+        let v: any = (s as any).value_json
+        while (v && typeof v === 'object' && !Array.isArray(v) && 'value' in v && Object.keys(v).length === 1) {
+          v = (v as any).value
+        }
+        data[s.key] = v ?? ''
       })
       setFormData((prev) => ({ ...prev, ...data }))
     }
@@ -123,7 +139,11 @@ export default function Settings() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">OBM Integration</h2>
+          <h2 className="mb-1 text-lg font-semibold">OBM Integration</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            {obmStatus?.message ||
+              'These settings are saved but nothing reads them yet — automatic PO import from OBM is not built.'}
+          </p>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium">API URL</label>
@@ -144,6 +164,15 @@ export default function Settings() {
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
             </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={formData.enable_obm_sync}
+                onChange={(e) => setFormData({ ...formData, enable_obm_sync: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Enable automatic sync when the OBM connector is built
+            </label>
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { authApi } from '@/api/auth'
+import { getApiErrorMessage } from '@/lib/apiError'
 import PasswordInput from '@/components/PasswordInput'
 
 export default function ChangePassword() {
@@ -34,9 +35,9 @@ export default function ChangePassword() {
         new_password: newPassword,
       })
       await refreshUser()
-      navigate('/')
+      navigate('/app')
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to change password')
+      setError(getApiErrorMessage(err, 'Failed to change password'))
     } finally {
       setIsLoading(false)
     }

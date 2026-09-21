@@ -1,5 +1,5 @@
 import client from './client'
-import type { Product, ProductImage, PaginatedResponse } from '@/types'
+import type { Product, ProductImage, ProductPrice, PaginatedResponse } from '@/types'
 
 export interface ProductListParams {
   page?: number
@@ -14,6 +14,7 @@ export interface CreateProductRequest {
   item_code: string
   name: string
   category: string
+  category_id?: number
   brand: string
   uom: string
   description?: string
@@ -22,6 +23,8 @@ export interface CreateProductRequest {
   stock_qty?: number
   stock_source?: string
   barcode?: string
+  evidence_policy?: string
+  inventory_model?: string
   is_active?: boolean
 }
 
@@ -49,9 +52,9 @@ export const productsApi = {
   uploadImage: (id: number, file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return client.post<ProductImage>(`/products/${id}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    // No Content-Type: the api client strips it so axios can set the multipart
+    // boundary. Setting it by hand breaks the upload.
+    return client.post<ProductImage>(`/products/${id}/images`, formData)
   },
 
   deleteImage: (productId: number, imageId: number) =>
@@ -59,4 +62,16 @@ export const productsApi = {
 
   setPrimaryImage: (productId: number, imageId: number) =>
     client.post(`/product-images/${imageId}/set-primary`),
+
+  listPrices: (id: number) =>
+    client.get<ProductPrice[]>(`/products/${id}/prices`),
+
+  createPrice: (id: number, data: { currency: string; unit_price: number; min_qty?: number | null }) =>
+    client.post<ProductPrice>(`/products/${id}/prices`, data),
+
+  updatePrice: (priceId: number, data: { unit_price?: number; min_qty?: number | null; is_active?: boolean }) =>
+    client.patch<ProductPrice>(`/product-prices/${priceId}`, data),
+
+  deletePrice: (priceId: number) =>
+    client.delete(`/product-prices/${priceId}`),
 }

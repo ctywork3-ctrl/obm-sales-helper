@@ -1,0 +1,3 @@
+# This keeps the temporary development tunnel separate from the existing
+# named-tunnel ingress configuration in ~/.cloudflared.
+originRequest: {}

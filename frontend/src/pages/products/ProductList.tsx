@@ -68,7 +68,7 @@ export default function ProductList() {
           {data.items.map((product) => (
             <Link
               key={product.id}
-              to={`/products/${product.id}`}
+              to={`/app/products/${product.id}`}
               className="group overflow-hidden rounded-lg border bg-white shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="aspect-square bg-gray-100">

@@ -21,3 +21,34 @@ Desktop.ini
 
 # Local Netlify folder
 .netlify
+
+# --- Added 2026-09-21: local junk, backups, old versions ---
+backend/backups/
+backups/
+backend/obm_sales.db
+smoke-screenshots/
+qwen version/
+season v1/
+season v2/
+season v3/
+season v4/
+season takle v1/
+season takle from google flash/
+season takle v5 model/
+season takle v5 unified/
+kimi k3 review/
+xiaomi mimo xpro review/
+percision/
+.workbuddy-ai/
+.kilo/
+qwen_gate_driver.py
+.driver_log.txt
+.qwen_screen.png
+.driver_cmd.json
+.qwen_token
+auto_out.txt
+auto_err.txt
+nul
+mgr2.txt
+mgr3.txt
+frontend/vite.config.ts.timestamp-*.mjs

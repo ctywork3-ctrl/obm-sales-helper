@@ -1,27 +1,45 @@
 import { useAuth } from '@/hooks/useAuth'
-import { useSalesOrders } from '@/hooks/useSalesOrders'
-import { Package, ShoppingCart, Clock, CheckCircle } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { getDashboardStats, DashboardStats } from '@/api/dashboard'
+import { Package, ShoppingCart, Clock, AlertTriangle, DollarSign } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { formatCurrency } from '@/lib/utils'
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const isSales = user?.role === 'OUTSIDE_SALES' || user?.role === 'INSIDE_SALES'
-  const { data: ordersData } = useSalesOrders(
-    isSales ? { page_size: 5 } : undefined
-  )
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: getDashboardStats,
+  })
 
-  const stats = [
+  const statCards = [
     {
-      label: 'Orders',
-      value: ordersData?.total || 0,
+      label: 'Total Orders',
+      value: stats?.total_orders || 0,
       icon: <ShoppingCart className="h-5 w-5" />,
-      href: user?.role === 'OUTSIDE_SALES' ? '/sales/my-orders' : '/sales/all-orders',
+      href: '/app/sales/all-orders',
+      color: 'text-blue-600 bg-blue-100',
     },
     {
-      label: 'Products',
-      value: '-',
-      icon: <Package className="h-5 w-5" />,
-      href: '/products',
+      label: 'Pending Orders',
+      value: stats?.pending_orders || 0,
+      icon: <Clock className="h-5 w-5" />,
+      href: '/app/sales/all-orders?status=SUBMITTED',
+      color: 'text-orange-600 bg-orange-100',
+    },
+    {
+      label: 'Total Revenue',
+      value: formatCurrency(stats?.total_revenue || 0, 'MYR'),
+      icon: <DollarSign className="h-5 w-5" />,
+      href: '/app/sales/all-orders?status=KEYED_TO_OBM',
+      color: 'text-green-600 bg-green-100',
+    },
+    {
+      label: 'Low Stock',
+      value: stats?.low_stock_count || 0,
+      icon: <AlertTriangle className="h-5 w-5" />,
+      href: '/app/products',
+      color: 'text-red-600 bg-red-100',
     },
   ]
 
@@ -34,40 +52,51 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            to={stat.href}
-            className="rounded-lg border bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-              <div className="rounded-full bg-primary/10 p-2 text-primary">
-                {stat.icon}
-              </div>
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="rounded-lg border bg-white p-4 shadow-sm animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-8 bg-gray-200 rounded w-16"></div>
             </div>
-          </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map((stat) => (
+            <Link
+              key={stat.label}
+              to={stat.href}
+              className="rounded-lg border bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                </div>
+                <div className={`rounded-full p-2 ${stat.color}`}>
+                  {stat.icon}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
-      {ordersData?.items && ordersData.items.length > 0 && (
+      {stats?.recent_orders && stats.recent_orders.length > 0 && (
         <div className="rounded-lg border bg-white p-4 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold">Recent Orders</h2>
           <div className="space-y-3">
-            {ordersData.items.map((order) => (
+            {stats.recent_orders.map((order) => (
               <Link
                 key={order.id}
-                to={`/sales/orders/${order.id}`}
+                to={`/app/sales/orders/${order.id}`}
                 className="flex items-center justify-between rounded-md border p-3 transition-colors hover:bg-accent"
               >
                 <div>
                   <p className="font-medium">{order.order_number}</p>
                   <p className="text-sm text-muted-foreground">
-                    {order.customer?.name || 'N/A'} - {new Date(order.created_at).toLocaleDateString()}
+                    {new Date(order.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

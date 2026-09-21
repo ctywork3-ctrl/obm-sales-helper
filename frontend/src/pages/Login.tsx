@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { getApiErrorMessage } from '@/lib/apiError'
 import PasswordInput from '@/components/PasswordInput'
 
 export default function Login() {
@@ -12,7 +13,7 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = (location.state as any)?.from?.pathname || '/'
+  const from = (location.state as any)?.from?.pathname || '/app'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,7 +24,7 @@ export default function Login() {
       await login(username, password)
       navigate(from, { replace: true })
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid username or password')
+      setError(getApiErrorMessage(err, 'Invalid username or password'))
     } finally {
       setIsLoading(false)
     }

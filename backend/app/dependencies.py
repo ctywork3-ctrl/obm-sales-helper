@@ -72,3 +72,21 @@ def require_permission(permission: str):
             )
         return current_user
     return dependency
+
+
+def require_any_permission(*permissions: str):
+    """Pass if the user holds at least one of the given permissions.
+
+    Needed where a screen is read by several very different roles — e.g. a
+    director may *view* receiving tasks (oversight) without being able to
+    *execute* them (that is the storekeeper's job).
+    """
+    async def dependency(current_user: User = Depends(get_current_user)):
+        user_permissions = ROLE_PERMISSIONS.get(current_user.role, [])
+        if not any(permission in user_permissions for permission in permissions):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"One of these permissions is required: {', '.join(permissions)}",
+            )
+        return current_user
+    return dependency

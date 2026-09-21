@@ -1,10 +1,24 @@
 import hashlib
 import json
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.audit_log import AuditLog
+
+
+def _sanitize_for_json(obj):
+    """Convert Decimal, datetime, etc. to JSON-safe primitives."""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_for_json(v) for v in obj]
+    if hasattr(obj, "isoformat"):
+        return obj.isoformat()
+    return obj
 
 
 class AuditService:
@@ -58,8 +72,8 @@ class AuditService:
             entity_type=entity_type,
             entity_id=entity_id,
             entity_label=entity_label,
-            old_values_json=old_values,
-            new_values_json=new_values,
+            old_values_json=_sanitize_for_json(old_values) if old_values else None,
+            new_values_json=_sanitize_for_json(new_values) if new_values else None,
             ip_address=ip_address,
             user_agent=user_agent,
             result=result,

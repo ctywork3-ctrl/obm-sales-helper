@@ -1,17 +1,27 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useProduct } from '@/hooks/useProducts'
+import { productUnitsApi } from '@/api/templates'
+import { useAuth } from '@/hooks/useAuth'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { formatCurrency } from '@/lib/utils'
 import { getUploadUrl } from '@/api/client'
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, PackageSearch } from 'lucide-react'
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const { user } = useAuth()
 
   const { data: product, isLoading } = useProduct(Number(id))
+  const canSeeUnits = ['STOCK_KEEPER', 'MANAGER', 'IT_ADMIN', 'DEVELOPER'].includes(user?.role || '')
+  const { data: units = [] } = useQuery({
+    queryKey: ['product-units', id],
+    queryFn: () => productUnitsApi.listForProduct(Number(id)).then((response) => response.data),
+    enabled: Boolean(id) && canSeeUnits,
+  })
 
   if (isLoading) {
     return (
@@ -128,6 +138,16 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+
+          {canSeeUnits && (
+            <div className="rounded-lg border bg-white p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h2 className="inline-flex items-center gap-2 text-lg font-semibold"><PackageSearch className="h-4 w-4" /> Physical units</h2>
+                <span className="text-sm text-muted-foreground">{units.length} serialized</span>
+              </div>
+              {units.length > 0 ? <div className="max-h-64 overflow-y-auto"><div className="divide-y">{units.map((unit) => <Link key={unit.id} to={`/app/warehouse/units/${unit.id}`} className="flex items-center justify-between gap-3 py-2 text-sm hover:bg-gray-50"><span><span className="block font-mono font-medium">{unit.unit_code || unit.serial_number}</span><span className="block text-xs text-muted-foreground">{unit.barcode || unit.manufacturer_serial || 'No barcode'} · {unit.warehouse_location || 'No location'}</span></span><span className="rounded-full bg-gray-100 px-2 py-1 text-xs">{unit.status}</span></Link>)}</div></div> : <p className="text-sm text-muted-foreground">No serialized units registered. Bulk stock is tracked by quantity.</p>}
+            </div>
+          )}
 
           <div className="rounded-lg border bg-white p-4">
             <h2 className="mb-2 text-lg font-semibold">Pricing & Stock</h2>

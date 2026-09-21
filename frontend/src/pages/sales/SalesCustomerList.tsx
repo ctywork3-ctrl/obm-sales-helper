@@ -4,7 +4,7 @@ import { useCustomers, useDeleteCustomer } from '@/hooks/useCustomers'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import SearchInput from '@/components/SearchInput'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import { Plus, Pencil, Trash2, Phone, MapPin } from 'lucide-react'
+import { Plus, Pencil, Trash2, Phone, MapPin, ClipboardList } from 'lucide-react'
 
 export default function SalesCustomerList() {
   const [search, setSearch] = useState('')
@@ -45,7 +45,7 @@ export default function SalesCustomerList() {
             className="w-full sm:w-64"
           />
           <Link
-            to="/sales/customers/new"
+            to="/app/sales/customers/new"
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
@@ -76,7 +76,14 @@ export default function SalesCustomerList() {
                 </div>
                 <div className="flex gap-1">
                   <Link
-                    to={`/sales/customers/${customer.id}/edit`}
+                    to={`/app/sales/customers/${customer.id}/orders`}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    title="Order History"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    to={`/app/sales/customers/${customer.id}/edit`}
                     className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   >
                     <Pencil className="h-4 w-4" />

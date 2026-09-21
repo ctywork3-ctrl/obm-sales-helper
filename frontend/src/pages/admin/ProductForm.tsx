@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useProduct, useCreateProduct, useUpdateProduct } from '@/hooks/useProducts'
+import { getApiErrorMessage } from '@/lib/apiError'
+import { masterDataApi } from '@/api/masterData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { ArrowLeft } from 'lucide-react'
 
@@ -13,20 +16,26 @@ export default function ProductForm() {
   const [itemCode, setItemCode] = useState('')
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
+  const [categoryId, setCategoryId] = useState<number | null>(null)
   const [brand, setBrand] = useState('')
   const [uom, setUom] = useState('pcs')
   const [description, setDescription] = useState('')
   const [sellingPrice, setSellingPrice] = useState(0)
   const [costPrice, setCostPrice] = useState(0)
-  const [stockQty, setStockQty] = useState(0)
   const [stockSource, setStockSource] = useState('')
   const [barcode, setBarcode] = useState('')
+  const [evidencePolicy, setEvidencePolicy] = useState('RECEIPT')
+  const [inventoryModel, setInventoryModel] = useState('BULK')
   const [isActive, setIsActive] = useState(true)
   const [error, setError] = useState('')
 
   const { data: existing, isLoading: loadingProduct } = useProduct(Number(id))
   const createProduct = useCreateProduct()
   const updateProduct = useUpdateProduct()
+  const { data: categories = [] } = useQuery({
+    queryKey: ['master-data', 'categories'],
+    queryFn: () => masterDataApi.categories().then((response) => response.data),
+  })
 
   useEffect(() => {
     if (existing) {
@@ -34,14 +43,16 @@ export default function ProductForm() {
       setItemCode(existing.item_code)
       setName(existing.name)
       setCategory(existing.category)
+      setCategoryId(existing.category_id || null)
       setBrand(existing.brand)
       setUom(existing.uom)
       setDescription(existing.description)
       setSellingPrice(existing.selling_price)
       setCostPrice(existing.cost_price)
-      setStockQty(existing.stock_qty)
       setStockSource(existing.stock_source)
       setBarcode(existing.barcode)
+      setEvidencePolicy(existing.evidence_policy || 'RECEIPT')
+      setInventoryModel(existing.inventory_model || 'BULK')
       setIsActive(existing.is_active)
     }
   }, [existing])
@@ -55,14 +66,16 @@ export default function ProductForm() {
       item_code: itemCode,
       name,
       category,
+      category_id: categoryId || undefined,
       brand,
       uom,
       description,
       selling_price: sellingPrice,
       cost_price: costPrice,
-      stock_qty: stockQty,
       stock_source: stockSource,
       barcode,
+      evidence_policy: evidencePolicy,
+      inventory_model: inventoryModel,
       is_active: isActive,
     }
 
@@ -70,11 +83,11 @@ export default function ProductForm() {
       if (isEdit) {
         await updateProduct.mutateAsync({ id: Number(id), data })
       } else {
-        await createProduct.mutateAsync(data)
+        await createProduct.mutateAsync({ ...data, stock_qty: 0 })
       }
-      navigate('/admin/products')
+      navigate('/app/admin/products')
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save product')
+      setError(getApiErrorMessage(err, 'Failed to save product'))
     }
   }
 
@@ -145,17 +158,19 @@ export default function ProductForm() {
             <div>
               <label className="block text-sm font-medium">Category</label>
               <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={categoryId || ''}
+                onChange={(e) => {
+                  const nextId = Number(e.target.value) || null
+                  setCategoryId(nextId)
+                  const selected = categories.find((item) => item.id === nextId)
+                  if (selected) setCategory(selected.name)
+                }}
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="">Select category</option>
-                <option value="Chemical">Chemical</option>
-                <option value="Equipment">Equipment</option>
-                <option value="Spare Parts">Spare Parts</option>
-                <option value="Consumables">Consumables</option>
-                <option value="Accessories">Accessories</option>
+                <option value="">Select manager category</option>
+                {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
+              {categories.length === 0 && <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Legacy category text" className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />}
             </div>
             <div>
               <label className="block text-sm font-medium">Brand</label>
@@ -182,7 +197,7 @@ export default function ProductForm() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium">Selling Price</label>
               <input
@@ -206,17 +221,18 @@ export default function ProductForm() {
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Stock Qty</label>
-              <input
-                type="number"
-                min="0"
-                value={stockQty}
-                onChange={(e) => setStockQty(Number(e.target.value))}
-                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              />
-            </div>
           </div>
+
+          {isEdit && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm text-amber-800">
+                Stock quantity is managed through receiving and adjustments, not this form.
+              </p>
+              <p className="text-xs text-amber-600 mt-1">
+                Current stock: {existing?.stock_qty ?? '—'} {existing?.uom ?? ''}
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -237,6 +253,39 @@ export default function ProductForm() {
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
             </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium">Receiving photo policy</label>
+            <select
+              value={evidencePolicy}
+              onChange={(e) => setEvidencePolicy(e.target.value)}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="RECEIPT">Receipt photo (one photo per delivery)</option>
+              <option value="UNIT">Unit photo (photo per serialized unit)</option>
+              <option value="NONE">No photo needed (e.g. nails, consumables)</option>
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Controls what warehouse staff are asked to photograph when receiving this product.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Stock tracking</label>
+            <select
+              value={inventoryModel}
+              onChange={(e) => setInventoryModel(e.target.value)}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="BULK">Just count quantity (nails, line, lures)</option>
+              <option value="SERIALIZED">Track each unit (rods, reels, parts)</option>
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tracked items get one barcode per unit and stock follows the unit count.
+            </p>
+          </div>
           </div>
 
           <div>

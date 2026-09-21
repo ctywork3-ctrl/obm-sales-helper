@@ -9,13 +9,33 @@ from alembic import context
 
 from app.config import settings
 from app.database import Base
-from app.models.user import User
-from app.models.product import Product, ProductImage
-from app.models.customer import Customer
-from app.models.sales_order import SalesOrder, SalesOrderItem
-from app.models.audit_log import AuditLog
-from app.models.session import Session
-from app.models.settings import Setting
+import app.models.user  # noqa: F401
+import app.models.product  # noqa: F401
+import app.models.customer  # noqa: F401
+import app.models.sales_order  # noqa: F401
+import app.models.audit_log  # noqa: F401
+import app.models.session  # noqa: F401
+import app.models.settings  # noqa: F401
+import app.models.role_permission  # noqa: F401
+import app.models.notification  # noqa: F401
+import app.models.comment  # noqa: F401
+import app.models.stock_movement  # noqa: F401
+import app.models.product_barcode  # noqa: F401
+import app.models.product_unit  # noqa: F401
+import app.models.product_unit_image  # noqa: F401
+import app.models.product_price  # noqa: F401
+import app.models.inventory_receipt  # noqa: F401
+import app.models.inventory_adjustment  # noqa: F401
+import app.models.purchase_order  # noqa: F401
+import app.models.location_log  # noqa: F401
+import app.models.master_data  # noqa: F401
+import app.models.order_template  # noqa: F401
+from app.models.customer import (  # noqa: F401
+    Customer,
+    CustomerContact,
+    CustomerAddress,
+)
+from app.models.sales_order import SalesOrder, SalesOrderItem  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

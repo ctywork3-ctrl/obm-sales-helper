@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useSalesOrder, useReviewOrder, useMarkKeyedToObm } from '@/hooks/useSalesOrders'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import StatusBadge from '@/components/StatusBadge'
-import { formatCurrency, formatDate } from '@/lib/utils'
-import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import SalesOrderPrintDialog from '@/components/SalesOrderPrintDialog'
+import { formatCurrency, formatDate, effectiveDiscountPercent } from '@/lib/utils'
+import { AlertTriangle, ArrowLeft, CheckCircle, Printer, Tag, XCircle } from 'lucide-react'
 
 export default function ReviewOrder() {
   const { id } = useParams<{ id: string }>()
@@ -13,6 +14,7 @@ export default function ReviewOrder() {
   const [obmRef, setObmRef] = useState('')
   const [showRejectForm, setShowRejectForm] = useState(false)
   const [showKeyedForm, setShowKeyedForm] = useState(false)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
   const [error, setError] = useState('')
 
   const { data: order, isLoading } = useSalesOrder(Number(id))
@@ -42,7 +44,7 @@ export default function ReviewOrder() {
         id: Number(id),
         data: { action: 'approve' },
       })
-      navigate('/sales/all-orders')
+      navigate('/app/sales/all-orders')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to approve order')
     }
@@ -59,7 +61,7 @@ export default function ReviewOrder() {
         id: Number(id),
         data: { action: 'reject', rejected_reason: rejectReason },
       })
-      navigate('/sales/all-orders')
+      navigate('/app/sales/all-orders')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to reject order')
     }
@@ -76,7 +78,7 @@ export default function ReviewOrder() {
         id: Number(id),
         data: { obm_reference_number: obmRef },
       })
-      navigate('/sales/all-orders')
+      navigate('/app/sales/all-orders')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to mark as keyed')
     }
@@ -127,7 +129,9 @@ export default function ReviewOrder() {
 
           <div className="rounded-lg border bg-white p-4 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold">Order Items</h2>
-            <div className="overflow-x-auto">
+            
+            {/* Desktop table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
@@ -152,6 +156,32 @@ export default function ReviewOrder() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t">
+                    <td colSpan={3} className="py-1 text-right text-muted-foreground">Gross subtotal</td>
+                    <td className="py-1 text-right">{formatCurrency(order.gross_subtotal ?? order.subtotal_amount ?? 0)}</td>
+                  </tr>
+                  {(order.line_discount_total || 0) > 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-1 text-right text-muted-foreground">Line discounts</td>
+                      <td className="py-1 text-right text-red-600">− {formatCurrency(order.line_discount_total || 0)}</td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td colSpan={3} className="py-1 text-right text-muted-foreground">Net subtotal</td>
+                    <td className="py-1 text-right">{formatCurrency(order.subtotal_amount ?? 0)}</td>
+                  </tr>
+                  {(order.order_discount_amount || 0) > 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-1 text-right text-muted-foreground">Order discount</td>
+                      <td className="py-1 text-right text-red-600">− {formatCurrency(order.order_discount_amount || 0)}</td>
+                    </tr>
+                  )}
+                  {(order.tax_amount || 0) > 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-1 text-right text-muted-foreground">Tax</td>
+                      <td className="py-1 text-right">{formatCurrency(order.tax_amount || 0)}</td>
+                    </tr>
+                  )}
+                  <tr className="border-t">
                     <td colSpan={3} className="py-2 text-right font-semibold">Total</td>
                     <td className="py-2 text-right text-lg font-bold text-primary">
                       {formatCurrency(order.total_amount)}
@@ -160,10 +190,78 @@ export default function ReviewOrder() {
                 </tfoot>
               </table>
             </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden space-y-3">
+              {order.items?.map((item) => (
+                <div key={item.id} className="rounded-md border p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.product_name_snapshot}</p>
+                      <p className="text-xs text-muted-foreground">{item.product_code_snapshot}</p>
+                    </div>
+                    <span className="font-semibold text-primary flex-shrink-0">{formatCurrency(item.line_total)}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Qty: {item.quantity}</span>
+                    <span>@ {formatCurrency(item.unit_price)}</span>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t pt-3">
+                <span className="font-semibold">Total</span>
+                <span className="text-lg font-bold text-primary">{formatCurrency(order.total_amount)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="space-y-4">
+          <button
+            onClick={() => setShowPrintDialog(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5"
+          >
+            <Printer className="h-4 w-4" />
+            Print / Save as PDF (A4)
+          </button>
+
+          {(order.discount_total || 0) > 0 && (
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold">Discount to review</h3>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total discount</span>
+                  <span className="font-semibold text-red-600">{formatCurrency(order.discount_total || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Effective</span>
+                  <span>
+                    {effectiveDiscountPercent(
+                      order.gross_subtotal ?? order.subtotal_amount ?? 0,
+                      order.discount_total || 0,
+                    )}
+                    %
+                  </span>
+                </div>
+                {order.discount_reason && (
+                  <div className="border-t pt-1">
+                    <p className="text-muted-foreground">Reason</p>
+                    <p>{order.discount_reason}</p>
+                  </div>
+                )}
+                {order.discount_requires_approval && (
+                  <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <span>This discount is above the approval threshold. Approving it records your sign-off.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {order.status === 'SUBMITTED' && (
             <div className="rounded-lg border bg-white p-4 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold">Review Actions</h2>

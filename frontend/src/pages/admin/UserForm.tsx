@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useUser, useCreateUser, useUpdateUser } from '@/hooks/useUsers'
 import PasswordInput from '@/components/PasswordInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { ROLE_OPTIONS } from '@/lib/utils'
 import { ArrowLeft } from 'lucide-react'
 
 export default function UserForm() {
@@ -61,7 +62,7 @@ export default function UserForm() {
           password,
         })
       }
-      navigate('/admin/users')
+      navigate('/app/admin/users')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to save user')
     }
@@ -150,11 +151,15 @@ export default function UserForm() {
               onChange={(e) => setRole(e.target.value)}
               className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="OUTSIDE_SALES">Outside Sales</option>
-              <option value="INSIDE_SALES">Inside Sales</option>
-              <option value="IT_ADMIN">IT Admin</option>
-              <option value="DEVELOPER">Developer</option>
+              {ROLE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label} — {option.description}
+                </option>
+              ))}
             </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              The role decides which menus and actions the user can reach.
+            </p>
           </div>
 
           {!isEdit && (

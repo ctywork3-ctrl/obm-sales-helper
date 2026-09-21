@@ -1,6 +1,19 @@
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, EmailStr
+
+
+class ValidRole(str, Enum):
+    DEVELOPER = "DEVELOPER"
+    IT_ADMIN = "IT_ADMIN"
+    DIRECTOR = "DIRECTOR"
+    OPERATIONS_MANAGER = "OPERATIONS_MANAGER"
+    PURCHASE_MANAGER = "PURCHASE_MANAGER"
+    MANAGER = "MANAGER"
+    INSIDE_SALES = "INSIDE_SALES"
+    OUTSIDE_SALES = "OUTSIDE_SALES"
+    STOCK_KEEPER = "STOCK_KEEPER"
 
 
 class UserBase(BaseModel):
@@ -8,7 +21,7 @@ class UserBase(BaseModel):
     full_name: str | None = None
     email: EmailStr | None = None
     phone: str | None = None
-    role: str
+    role: ValidRole
 
 
 class UserCreate(UserBase):
@@ -19,6 +32,9 @@ class UserUpdate(BaseModel):
     full_name: str | None = None
     email: EmailStr | None = None
     phone: str | None = None
+    # BUGFIX: the edit form has always sent `role`, but the schema dropped it,
+    # so changing a user's role silently did nothing. It is accepted now.
+    role: ValidRole | None = None
 
 
 class UserResponse(UserBase):
@@ -35,4 +51,4 @@ class UserResponse(UserBase):
 
 
 class AssignRoleRequest(BaseModel):
-    role: str
+    role: ValidRole

@@ -1,0 +1,56 @@
+{
+  "name": "OBM Sales Helper",
+  "short_name": "OBM Helper",
+  "description": "Sales orders, warehouse receiving and warranty lookup for the fishing tackle business.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0F6E56",
+  "background_color": "#ffffff",
+  "lang": "en-MY",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Receiving tasks",
+      "short_name": "Tasks",
+      "description": "Count an incoming delivery",
+      "url": "/app/warehouse/tasks",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scan item",
+      "short_name": "Scan",
+      "description": "Scan a barcode or serial",
+      "url": "/app/warehouse/scanner",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Warranty lookup",
+      "short_name": "Warranty",
+      "description": "Trace a serial number",
+      "url": "/app/warehouse/warranty",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

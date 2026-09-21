@@ -48,7 +48,7 @@ export default function SalesCustomerForm() {
           code,
         })
       }
-      navigate('/sales/customers')
+      navigate('/app/sales/customers')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to save customer')
     }

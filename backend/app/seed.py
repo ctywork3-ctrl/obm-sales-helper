@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 from sqlalchemy import select
@@ -6,8 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.customer import Customer
 from app.models.product import Product
 from app.models.settings import Setting
+from app.models.stock_movement import StockMovement
 from app.models.user import User
+from app.models.warehouse import ReportTemplate, StockLocation
 from app.services.auth import hash_password
+from app.services.labels import DEFAULT_LABEL_CONFIG
+from app.services.reporting import default_template_config
+
+
+def default_label_config() -> dict:
+    import copy
+
+    return copy.deepcopy(DEFAULT_LABEL_CONFIG)
 
 
 
@@ -80,12 +91,83 @@ async def seed_database(db: AsyncSession):
         )
         db.add(inside01)
 
+    existing_stockkeeper01 = await db.execute(select(User).where(User.username == "stockkeeper01"))
+    if not existing_stockkeeper01.scalar_one_or_none():
+        stockkeeper01 = User(
+            username="stockkeeper01",
+            full_name="Ahmad Warehouse",
+            email="stockkeeper01@obm.com",
+            role="STOCK_KEEPER",
+            password_hash=hash_password("password123"),
+            must_change_password=False,
+            is_active=True,
+            temp_password_display="password123",
+        )
+        db.add(stockkeeper01)
+
+    existing_purchasemanager = await db.execute(
+        select(User).where(User.username == "purchasemanager01")
+    )
+    if not existing_purchasemanager.scalar_one_or_none():
+        purchasemanager01 = User(
+            username="purchasemanager01",
+            full_name="Siti Purchase Manager",
+            email="purchasemanager01@obm.com",
+            role="PURCHASE_MANAGER",
+            password_hash=hash_password("password123"),
+            must_change_password=False,
+            is_active=True,
+            temp_password_display="password123",
+        )
+        db.add(purchasemanager01)
+
+    existing_director = await db.execute(select(User).where(User.username == "director"))
+    if not existing_director.scalar_one_or_none():
+        director = User(
+            username="director",
+            full_name="Company Director",
+            email="director@obm.com",
+            role="DIRECTOR",
+            password_hash=hash_password("password123"),
+            must_change_password=False,
+            is_active=True,
+            temp_password_display="password123",
+        )
+        db.add(director)
+
+    existing_opsmanager = await db.execute(
+        select(User).where(User.username == "operationsmanager01")
+    )
+    if not existing_opsmanager.scalar_one_or_none():
+        operationsmanager01 = User(
+            username="operationsmanager01",
+            full_name="Operations Manager",
+            email="operationsmanager01@obm.com",
+            role="OPERATIONS_MANAGER",
+            password_hash=hash_password("password123"),
+            must_change_password=False,
+            is_active=True,
+            temp_password_display="password123",
+        )
+        db.add(operationsmanager01)
+
     default_settings = [
         {"key": "company_name", "value_json": {"value": "OBM Sales"}},
+        {"key": "company_address", "value_json": {"value": ""}},
+        {"key": "company_phone", "value_json": {"value": ""}},
+        {"key": "company_email", "value_json": {"value": ""}},
+        {"key": "company_reg_no", "value_json": {"value": ""}},
+        {"key": "company_logo_url", "value_json": {"value": ""}},
+        {"key": "company_bank_details", "value_json": {"value": ""}},
+        {"key": "company_terms", "value_json": {"value": ""}},
         {"key": "default_currency", "value_json": {"value": "MYR"}},
         {"key": "max_order_items", "value_json": {"value": 50}},
         {"key": "order_prefix", "value_json": {"value": "SO"}},
         {"key": "enable_obm_sync", "value_json": {"value": False}},
+        {"key": "discount_approval_threshold_percent", "value_json": {"value": 10}},
+        {"key": "default_warranty_months", "value_json": {"value": 12}},
+        {"key": "public_app_url", "value_json": {"value": ""}},
+        {"key": "label_print_settings", "value_json": {"value": default_label_config()}},
     ]
 
     for setting_data in default_settings:
@@ -98,6 +180,8 @@ async def seed_database(db: AsyncSession):
 
     await _seed_customers(db)
     await _seed_products(db)
+    await _seed_stock_locations(db)
+    await _seed_report_templates(db)
     await db.commit()
 
 
@@ -169,3 +253,55 @@ async def _seed_products(db: AsyncSession):
     ]
     for p in products:
         db.add(p)
+    await db.flush()
+
+    for p in products:
+        if (p.stock_qty or 0) > 0:
+            db.add(StockMovement(
+                product_id=p.id,
+                quantity_delta=p.stock_qty,
+                movement_type="PRODUCT_OPENING.receive",
+                source_type="PRODUCT_OPENING",
+                source_id=p.id,
+                idempotency_key=f"PRODUCT_OPENING:{p.id}",
+                reason="Opening stock (seed)",
+            ))
+
+
+async def _seed_stock_locations(db: AsyncSession):
+    existing = await db.execute(select(StockLocation).limit(1))
+    if existing.scalar_one_or_none():
+        return
+
+    locations = [
+        StockLocation(code="SHOWROOM", name="Showroom", zone="SHOWROOM", notes="Front counter display stock"),
+        StockLocation(code="WH-MAIN", name="Main Warehouse", zone="WAREHOUSE", notes="Bulk storage"),
+        StockLocation(code="WH-RACK-A", name="Rack A - Rods", zone="RACK", notes="Long goods"),
+        StockLocation(code="WH-RACK-B", name="Rack B - Reels & Small", zone="RACK"),
+        StockLocation(code="RETURNS", name="Returns / Warranty", zone="RETURNS", notes="Items waiting on a warranty decision"),
+        StockLocation(code="DAMAGED", name="Damaged Bin", zone="DAMAGED", notes="Not sellable"),
+    ]
+    for location in locations:
+        db.add(location)
+    await db.flush()
+
+
+async def _seed_report_templates(db: AsyncSession):
+    existing = await db.execute(select(ReportTemplate).limit(1))
+    if existing.scalar_one_or_none():
+        return
+
+    from app.services.reporting import DOC_TYPES
+
+    for doc_type in DOC_TYPES:
+        db.add(ReportTemplate(
+            name=f"Default {doc_type['label']} (A4)",
+            doc_type=doc_type["key"],
+            paper_size="A4",
+            orientation="portrait",
+            config_json=json.dumps(default_template_config(doc_type["key"])),
+            is_default=True,
+            is_active=True,
+            notes="Seeded default layout",
+        ))
+    await db.flush()

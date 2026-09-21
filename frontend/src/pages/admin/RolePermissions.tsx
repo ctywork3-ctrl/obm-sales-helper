@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import client from '@/api/client'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { getRoleDisplayName } from '@/lib/utils'
-import { Shield, Save } from 'lucide-react'
+import { Shield, Save, RotateCcw } from 'lucide-react'
 
 interface RolePermission {
   id: number
@@ -76,6 +76,22 @@ export default function RolePermissions() {
     }
   }
 
+  const resetToDefaults = async () => {
+    if (!window.confirm('Reset ALL role page permissions to the recommended defaults? Unsaved changes will be lost.')) return
+    setIsSaving(true)
+    setMessage('')
+    try {
+      await client.post('/role-permissions/reset-defaults')
+      await fetchPermissions()
+      setMessage('Permissions reset to defaults')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      setMessage('Failed to reset permissions')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -96,11 +112,21 @@ export default function RolePermissions() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Role Permissions</h1>
-        <p className="text-muted-foreground">
-          Configure which pages each role can see in the sidebar.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Menu Access</h1>
+          <p className="text-muted-foreground">
+            Tick the pages each role can see in the menu.
+          </p>
+        </div>
+        <button
+          onClick={resetToDefaults}
+          disabled={isSaving}
+          className="inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset to defaults
+        </button>
       </div>
 
       {message && (

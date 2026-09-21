@@ -23,21 +23,29 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: <LayoutDashboard className="h-5 w-5" /> },
-  { label: 'Products', href: '/products', icon: <Package className="h-5 w-5" /> },
-  { label: 'My Customers', href: '/sales/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['OUTSIDE_SALES', 'INSIDE_SALES'] },
-  { label: 'Create Order', href: '/sales/create', icon: <ShoppingCart className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
-  { label: 'My Orders', href: '/sales/my-orders', icon: <ListOrdered className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
-  { label: 'All Orders', href: '/sales/all-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['INSIDE_SALES', 'IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Dashboard', href: '/app', icon: <LayoutDashboard className="h-5 w-5" /> },
+  { label: 'Products', href: '/app/products', icon: <Package className="h-5 w-5" /> },
+  { label: 'My Customers', href: '/app/sales/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['OUTSIDE_SALES', 'INSIDE_SALES'] },
+  { label: 'Create Order', href: '/app/sales/create', icon: <ShoppingCart className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
+  { label: 'My Orders', href: '/app/sales/my-orders', icon: <ListOrdered className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
+  { label: 'Templates', href: '/app/sales/templates', icon: <ClipboardList className="h-5 w-5" />, roles: ['OUTSIDE_SALES'] },
+  { label: 'All Orders', href: '/app/sales/all-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['INSIDE_SALES', 'IT_ADMIN', 'DEVELOPER', 'MANAGER'] },
+  { label: 'Warehouse', href: '/app/warehouse/scanner', icon: <Package className="h-5 w-5" />, roles: ['STOCK_KEEPER', 'MANAGER', 'IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Goods Received', href: '/app/warehouse/receiving', icon: <Package className="h-5 w-5" />, roles: ['STOCK_KEEPER', 'MANAGER', 'IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Fix Stock Count', href: '/app/warehouse/adjustment', icon: <Package className="h-5 w-5" />, roles: ['STOCK_KEEPER', 'MANAGER', 'IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Received History', href: '/app/warehouse/receipts', icon: <ClipboardList className="h-5 w-5" />, roles: ['STOCK_KEEPER', 'MANAGER', 'IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Supplier PO', href: '/app/purchase-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['STOCK_KEEPER', 'MANAGER', 'IT_ADMIN', 'DEVELOPER'] },
 ]
 
 const adminItems: NavItem[] = [
-  { label: 'Users', href: '/admin/users', icon: <Users className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
-  { label: 'Products', href: '/admin/products', icon: <Package className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
-  { label: 'Customers', href: '/admin/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['IT_ADMIN', 'INSIDE_SALES'] },
-  { label: 'Audit Logs', href: '/admin/audit-logs', icon: <ClipboardList className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
-  { label: 'Settings', href: '/admin/settings', icon: <Settings className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
-  { label: 'Role Permissions', href: '/admin/role-permissions', icon: <Shield className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Users', href: '/app/admin/users', icon: <Users className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Products', href: '/app/admin/products', icon: <Package className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER', 'MANAGER'] },
+  { label: 'Categories', href: '/app/admin/categories', icon: <Package className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER', 'MANAGER'] },
+  { label: 'New Item Requests', href: '/app/admin/intake-requests', icon: <ClipboardList className="h-5 w-5" />, roles: ['MANAGER', 'IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Customers', href: '/app/admin/customers', icon: <UsersRound className="h-5 w-5" />, roles: ['IT_ADMIN', 'INSIDE_SALES'] },
+  { label: 'Activity', href: '/app/admin/activity', icon: <ClipboardList className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Settings', href: '/app/admin/settings', icon: <Settings className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
+  { label: 'Menu Access', href: '/app/admin/role-permissions', icon: <Shield className="h-5 w-5" />, roles: ['IT_ADMIN', 'DEVELOPER'] },
 ]
 
 interface MobileNavProps {
@@ -67,7 +75,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="fixed inset-0 z-50 md:hidden">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <aside className="fixed inset-y-0 left-0 w-72 bg-white shadow-lg">
         <div className="flex h-14 items-center justify-between border-b px-4">
@@ -81,7 +89,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
             <NavLink
               key={item.href}
               to={item.href}
-              end={item.href === '/'}
+              end={item.href === '/app'}
               onClick={onClose}
               className={({ isActive }) =>
                 cn(

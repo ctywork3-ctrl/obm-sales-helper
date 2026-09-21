@@ -50,7 +50,7 @@ export default function MyOrders() {
           {data.items.map((order) => (
             <Link
               key={order.id}
-              to={`/sales/orders/${order.id}`}
+              to={`/app/sales/orders/${order.id}`}
               className="block rounded-lg border bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

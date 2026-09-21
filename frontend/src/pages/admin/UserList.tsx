@@ -58,7 +58,7 @@ export default function UserList() {
             Show Credentials
           </button>
           <Link
-            to="/admin/users/new"
+              to="/app/admin/users/new"
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
@@ -99,7 +99,7 @@ export default function UserList() {
                 </div>
                 <div className="flex items-center gap-3 pt-2 border-t">
                   <Link
-                    to={`/admin/users/${user.id}/edit`}
+                    to={`/app/admin/users/${user.id}/edit`}
                     className="flex-1 flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium hover:bg-accent"
                   >
                     <Pencil className="h-4 w-4" />
@@ -169,7 +169,7 @@ export default function UserList() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <Link
-                          to={`/admin/users/${user.id}/edit`}
+                          to={`/app/admin/users/${user.id}/edit`}
                           className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         >
                           <Pencil className="h-4 w-4" />

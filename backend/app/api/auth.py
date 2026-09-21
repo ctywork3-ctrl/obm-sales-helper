@@ -71,6 +71,15 @@ async def login(
         expires_at=expires_at,
     )
     db.add(session)
+    await db.flush()
+
+    # Single device per person: signing in here signs out any older devices.
+    from sqlalchemy import update
+    await db.execute(
+        update(Session)
+        .where(Session.user_id == user.id, Session.id != session.id, Session.is_revoked == False)
+        .values(is_revoked=True)
+    )
 
     user.last_login_at = datetime.utcnow()
     user.failed_login_count = 0
@@ -137,6 +146,35 @@ async def logout(
 
     response.delete_cookie("session_token")
     return MessageResponse(message="Logged out successfully")
+
+
+@router.post("/logout-all", response_model=MessageResponse)
+async def logout_all(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    token = request.cookies.get("session_token")
+    token_hash = _hash_token(token) if token else None
+    from sqlalchemy import update
+    await db.execute(
+        update(Session)
+        .where(Session.user_id == current_user.id, Session.is_revoked == False, Session.session_token_hash != (token_hash or ""))
+        .values(is_revoked=True)
+    )
+
+    await AuditService.log(
+        db=db,
+        action="auth.logout_all",
+        actor_user_id=current_user.id,
+        actor_role_at_time=current_user.role,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+    await db.commit()
+    response.delete_cookie("session_token")
+    return MessageResponse(message="Signed out of all other devices")
 
 
 @router.get("/me", response_model=UserResponse)

@@ -51,7 +51,7 @@ export default function CustomerForm() {
       } else {
         await createCustomer.mutateAsync(data)
       }
-      navigate('/admin/customers')
+      navigate('/app/admin/customers')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to save customer')
     }

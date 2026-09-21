@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user, require_permission
+from app.models.session import Session
 from app.models.user import User
 from app.permissions import Permissions
 from app.schemas.user import AssignRoleRequest, UserCreate, UserResponse, UserUpdate
@@ -56,6 +57,7 @@ async def create_user(
         role=body.role,
         password_hash=hash_password(temp_password),
         must_change_password=True,
+        temp_password_display=temp_password,
     )
     db.add(user)
     await db.flush()
@@ -251,6 +253,9 @@ async def reset_password(
 
     await db.commit()
     return {"temporary_password": temp_password}
+
+
+@router.post("/{user_id}/assign-role", response_model=UserResponse)
 async def assign_role(
     user_id: int,
     body: AssignRoleRequest,
@@ -283,3 +288,61 @@ async def assign_role(
     await db.commit()
     await db.refresh(user)
     return UserResponse.model_validate(user)
+
+
+@router.get("/{user_id}/sessions")
+async def list_user_sessions(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.USERS_VIEW)),
+):
+    result = await db.execute(
+        select(Session)
+        .where(Session.user_id == user_id, Session.is_revoked == False)
+        .order_by(Session.last_seen_at.desc())
+    )
+    sessions = result.scalars().all()
+    now = datetime.now(timezone.utc)
+    return [
+        {
+            "id": s.id,
+            "ip_address": s.ip_address,
+            "user_agent": s.user_agent,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "last_seen_at": s.last_seen_at.isoformat() if s.last_seen_at else None,
+            "is_active": s.expires_at is not None and s.expires_at.replace(tzinfo=timezone.utc) > now,
+        }
+        for s in sessions
+    ]
+
+
+@router.post("/{user_id}/logout-all")
+async def force_logout_all(
+    user_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.USERS_MANAGE)),
+):
+    target = await db.execute(select(User).where(User.id == user_id))
+    user = target.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    await db.execute(
+        update(Session)
+        .where(Session.user_id == user_id, Session.is_revoked == False)
+        .values(is_revoked=True)
+    )
+    await AuditService.log(
+        db=db,
+        action="users.force_logout_all",
+        actor_user_id=current_user.id,
+        actor_role_at_time=current_user.role,
+        entity_type="user",
+        entity_id=user_id,
+        entity_label=user.username,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+    await db.commit()
+    return {"message": f"All sessions for {user.username} have been ended"}

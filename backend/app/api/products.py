@@ -10,8 +10,36 @@ from app.models.user import User
 from app.permissions import Permissions
 from app.schemas.product import ProductCreate, ProductListResponse, ProductResponse, ProductUpdate
 from app.services.audit import AuditService
+from app.services.stock import receive_stock
 
 router = APIRouter(prefix="/api/products", tags=["products"])
+
+VALID_EVIDENCE_POLICIES = {"NONE", "RECEIPT", "UNIT"}
+VALID_INVENTORY_MODELS = {"BULK", "SERIALIZED"}
+
+SERIALIZED_CATEGORIES = {"equipment", "spare parts"}
+
+
+def _validate_evidence_policy(value: str | None) -> str:
+    policy = (value or "RECEIPT").upper()
+    if policy not in VALID_EVIDENCE_POLICIES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"evidence_policy must be one of: {', '.join(sorted(VALID_EVIDENCE_POLICIES))}",
+        )
+    return policy
+
+
+def _validate_inventory_model(value: str | None, category: str | None = None) -> str:
+    if value:
+        model = value.upper()
+        if model not in VALID_INVENTORY_MODELS:
+            raise HTTPException(
+                status_code=400,
+                detail="inventory_model must be BULK or SERIALIZED",
+            )
+        return model
+    return "SERIALIZED" if (category or "").lower() in SERIALIZED_CATEGORIES else "BULK"
 
 
 @router.get("/all", response_model=ProductListResponse)
@@ -26,7 +54,7 @@ async def list_products(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(Permissions.PRODUCTS_VIEW)),
 ):
-    query = select(Product).options(selectinload(Product.images))
+    query = select(Product).options(selectinload(Product.images), selectinload(Product.prices))
 
     if search:
         query = query.where(
@@ -51,8 +79,15 @@ async def list_products(
     result = await db.execute(query)
     products = result.scalars().unique().all()
 
+    items = []
+    for product in products:
+        item = ProductResponse.model_validate(product)
+        if current_user.role not in ["IT_ADMIN", "DEVELOPER", "MANAGER"]:
+            item.cost_price = None
+        items.append(item)
+
     return ProductListResponse(
-        items=[ProductResponse.model_validate(p) for p in products],
+        items=items,
         total=total,
         page=page,
         page_size=page_size,
@@ -82,8 +117,23 @@ async def create_product(
         created_by=current_user.id,
         updated_by=current_user.id,
     )
+    product.evidence_policy = _validate_evidence_policy(body.evidence_policy)
+    product.inventory_model = _validate_inventory_model(body.inventory_model, body.category)
     db.add(product)
     await db.flush()
+
+    if (body.stock_qty or 0) > 0:
+        if not await receive_stock(
+            db,
+            product.id,
+            body.stock_qty,
+            "PRODUCT_OPENING",
+            product.id,
+            performed_by=current_user.id,
+            reason="Opening stock on product creation",
+            idempotency_key=f"PRODUCT_OPENING:{product.id}",
+        ):
+            raise HTTPException(status_code=400, detail="Could not register opening stock")
 
     await AuditService.log(
         db=db,
@@ -102,7 +152,7 @@ async def create_product(
     await db.refresh(product)
 
     result = await db.execute(
-        select(Product).options(selectinload(Product.images)).where(Product.id == product.id)
+        select(Product).options(selectinload(Product.images), selectinload(Product.prices)).where(Product.id == product.id)
     )
     product = result.scalar_one()
     return ProductResponse.model_validate(product)
@@ -115,12 +165,18 @@ async def get_product(
     current_user: User = Depends(require_permission(Permissions.PRODUCTS_VIEW)),
 ):
     result = await db.execute(
-        select(Product).options(selectinload(Product.images)).where(Product.id == product_id)
+        select(Product).options(selectinload(Product.images), selectinload(Product.prices)).where(Product.id == product_id)
     )
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    return ProductResponse.model_validate(product)
+
+    resp = ProductResponse.model_validate(product)
+
+    if current_user.role not in ["IT_ADMIN", "DEVELOPER", "MANAGER"]:
+        resp.cost_price = None
+
+    return resp
 
 
 @router.patch("/{product_id}", response_model=ProductResponse)
@@ -139,9 +195,28 @@ async def update_product(
     old_values = {k: getattr(product, k) for k in body.model_fields if getattr(product, k, None) is not None}
 
     update_data = body.model_dump(exclude_unset=True)
+    if "evidence_policy" in update_data:
+        update_data["evidence_policy"] = _validate_evidence_policy(update_data["evidence_policy"])
+    model_changed_to_serialized = False
+    if "inventory_model" in update_data:
+        update_data["inventory_model"] = _validate_inventory_model(update_data["inventory_model"])
+        model_changed_to_serialized = (
+            update_data["inventory_model"] == "SERIALIZED"
+            and (product.inventory_model or "BULK") != "SERIALIZED"
+        )
     for field, value in update_data.items():
         setattr(product, field, value)
     product.updated_by = current_user.id
+
+    # Switching a product to SERIALIZED makes its stock_qty a derived value
+    # (the count of AVAILABLE units). Recompute it immediately, otherwise the
+    # old bulk figure lingers and every stock screen shows a number that does
+    # not match the units on the shelf.
+    if model_changed_to_serialized:
+        from app.services.stock import recompute_serialized_stock
+
+        await db.flush()
+        await recompute_serialized_stock(db, product.id)
 
     await AuditService.log(
         db=db,
@@ -160,7 +235,7 @@ async def update_product(
     await db.commit()
 
     result = await db.execute(
-        select(Product).options(selectinload(Product.images)).where(Product.id == product.id)
+        select(Product).options(selectinload(Product.images), selectinload(Product.prices)).where(Product.id == product.id)
     )
     product = result.scalar_one()
     return ProductResponse.model_validate(product)
